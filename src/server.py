@@ -1,22 +1,38 @@
 import threading
 
-def run(server):
-    print("Server iniciado!")
-    while True:
-        server.check_requests()
-
 class Server:
     def __init__(self, assentos_quant):
         self.requests = {}
         self.assentos = {f"{numero + 1}": False for numero in range(assentos_quant)}
         threading.Thread(target = run, args = [self]).start()
 
+    #Aki é a lógica inteira para checar os comandos enviados pelos clientes
+    #a cada comando completo, o comando e retirado da lista self.requests.
     def check_requests(self):
-        for tipo, param in self.requests.items():
+        remove_queue = []
+        for tipo, valor in self.requests.items():
             if tipo == "print":
-                print(param)
+                for texto in valor:
+                    print(texto)
+                    remove_queue.append((tipo, texto))
+            else:
+                print("COMANDO INVALIDO!")
+                remove_queue.append((tipo, valor)) #Isso talvez quebre.
 
-        self.requests.clear()
+
+        for tipo, valor in remove_queue:
+            self.requests[tipo].remove(valor)
+            print(f"removido chamada: {tipo} {valor}")
+
+    def add_request(self, request_type, param):
+        if request_type not in self.requests:
+            self.requests[request_type] = []
+        self.requests[request_type].append(param)
+
+def run(server):
+    print("Server iniciado!")
+    while True:
+        server.check_requests()
 
 if __name__ == "__main__":
     servidor = Server(10)
