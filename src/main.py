@@ -3,7 +3,8 @@ import client
 import time
 
 if __name__ == "__main__":
-    servidor = server.Server(100)
+    assentos = input("quantos assentos?")
+    servidor = server.Server(int(assentos))
     time.sleep(1)
 
     while True:

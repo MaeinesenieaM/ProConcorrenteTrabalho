@@ -4,7 +4,7 @@ class Server:
     def __init__(self, assentos_quant):
         self.requests = {}
         self.assentos = {f"{numero + 1}": None for numero in range(assentos_quant)}
-        self.lock = threading.Lock()
+        #self.lock = threading.Lock()
         threading.Thread(target=self.run, daemon=True).start()
 
     def run(self):
@@ -12,35 +12,35 @@ class Server:
         while True:
             self.check_requests()
     #Aki é a lógica inteira para checar os comandos enviados pelos clientes
-    #a cada comando completo, o comando e retirado da lista self.requests.
+    #a cada comando completo, o comando e retirado da lista self.requests
+    #para evitar repetição.
     def check_requests(self):
-        with self.lock:
+        #with self.lock:
             remove_queue = []
-
             current_requests = self.requests.copy()
             for tipo, valores in current_requests.items():
                 for valor in valores:
-                    if tipo == "reservar":
-                        nome, assento = valor
-                        if assento in self.assentos:
-                            if self.assentos[assento] is None:
-                                self.assentos[assento] = nome
-                                print(f"[SERVER] Assento {assento} reservado com sucesso por {nome}.")
+                    match tipo:
+                        case "reservar":
+                            nome, assento = valor
+                            if assento in self.assentos:
+                                if self.assentos[assento] is None:
+                                    self.assentos[assento] = nome
+                                    print(f"[SERVER] Assento {assento} reservado com sucesso por {nome}.")
+                                else:
+                                    print(f"[SERVER] Assento {assento} já está reservado por {self.assentos[assento]}.")
                             else:
-                                print(f"[SERVER] Assento {assento} já está reservado por {self.assentos[assento]}.")
-                        else:
-                            print(f"[SERVER] Assento {assento} inválido.")
-                        remove_queue.append((tipo, valor))
+                                print(f"[SERVER] Assento {assento} inválido.")
+                            remove_queue.append((tipo, valor))
+                        case "listar":
+                            nome = valor
+                            self.listar_assentos(nome)
+                            remove_queue.append((tipo, valor))
+                        case "sair":
+                            print(f"[SERVER] Cliente {valor} saiu.")
+                            remove_queue.append((tipo, valor))
 
-                    elif tipo == "listar":
-                        nome = valor
-                        self.listar_assentos(nome)
-                        remove_queue.append((tipo, valor))
-
-                    elif tipo == "sair":
-                        print(f"[SERVER] Cliente {valor} saiu.")
-                        remove_queue.append((tipo, valor))
-
+            #Remove as requests de clientes da lista.
             for tipo, valor in remove_queue:
                 if tipo in self.requests and valor in self.requests[tipo]:
                     self.requests[tipo].remove(valor)
