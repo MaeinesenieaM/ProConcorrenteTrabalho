@@ -1,22 +1,33 @@
 import threading
-import server
 import time
+from server import Server
 
 class Client:
-    def __init__(self, servidor: server.Server):
-        self.servidor = servidor
-        self.nome = input("Digite seu nome: ")
-        self.thread = threading.Thread(target=self.run)
-        self.thread.start()
+    def __init__(self, servidor: Server):
+        self.server = servidor
+        self.server_response = {}
+        self.nome = str(input("Digite seu nome: "))
+
+        servidor.add_client(self.nome, self)
+
+        threading.Thread(target=self.run).start()
 
     def reservar(self, assento):
-        self.servidor.add_request("reservar", (self.nome, assento))
+        self.server.add_request("reservar", (self.nome, assento))
+        resposta = self.listen_type("reservado")
+        print(resposta)
 
     def listar_assentos(self):
-        self.servidor.add_request("listar", self.nome)
+        self.server.add_request("listar", self.nome)
+        assentos = self.listen_type("assentos")
+        if assentos is None:
+            print("TODO!")
+        print(assentos)
 
     def sair(self):
-        self.servidor.add_request("sair", self.nome)
+        self.server.add_request("sair", self.nome)
+        print(f"Encerrando cliente {self.nome}...")
+        exit(0)
 
     def run(self):
         print(f"Cliente {self.nome} iniciado!")
@@ -35,9 +46,19 @@ class Client:
                 self.reservar(assento)
             elif escolha == "3":
                 self.sair()
-                print(f"Encerrando cliente {self.nome}...")
-                break
             else:
                 print("Opção inválida.")
+                time.sleep(0.5)
 
-                time.sleep(0.2)
+    def listen_type(self, tipo: str):
+        espera = time.time()
+        while True:
+            segundos = 5
+            if time.time() - espera > segundos:
+                print("Servidor não esta respondendo!")
+                return ""
+            if not self.server_response: continue
+            if not self.server_response[tipo]:
+                print("ERRO CRITICO! TIPO DE RESPOSTA ESPERADA NÃO FOI ATENDIDA!")
+                return ""
+            return self.server_response[tipo].items()

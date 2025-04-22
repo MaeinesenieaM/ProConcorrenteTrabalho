@@ -1,8 +1,10 @@
 import threading
+from client import Client
 
 class Server:
     def __init__(self, assentos_quant):
         self.requests = {}
+        self.clients = {}
         self.assentos = {f"{numero + 1}": None for numero in range(assentos_quant)}
         #self.lock = threading.Lock()
         threading.Thread(target=self.run, daemon=True).start()
@@ -70,3 +72,8 @@ class Server:
         if request_type not in self.requests:
             self.requests[request_type] = []
         self.requests[request_type].append(param)
+
+    def add_client(self, name: str, client: Client):
+        if name in self.clients:
+            print("TODO!")
+        self.clients[name] = client
